@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+#root {
+  height: 100vh;
+  width: 100vw;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+html {
+  width: 100vw;
+  height: 100vh;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  width: 100vw;
+  height: 100vh;
+}
+
+.spinning {
+  animation: spin 2000s linear infinite;
+}
+
+.bg-white-low {
+  background: #00000070;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.chooseFileBtn {
+  background: linear-gradient(to bottom, rgb(0, 0, 0), black, rgb(44, 44, 44));
+}
+
+.control-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  /* position: absolute; */
+  transition: all 0.2s ease;
+  /* -webkit-app-region: no-drag; */
+}
+
+.window-controls {
+  display: flex;
+  flex-direction: row;
+  justify-content: end;
+  align-items: center;
+  gap: 8px;
+  /* -webkit-app-region: no-drag; */
+  width: 33.3%;
+  position: absolute;
+  top: 6px;
+  right: 8px;
+}
+
+/* .control-button:hover {
+
+} */
