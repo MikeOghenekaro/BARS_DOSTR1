@@ -73,6 +73,7 @@ export default function App() {
             <Route path="add-admin" element={<AddAdmin />} />
             <Route path="settings" element={<Settings />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="home" element={<Home />} />
           </Route>
 
           {/* Optional: Catch-all route for any unmatched paths */}
