@@ -18,9 +18,11 @@ import Services from "./pages/Services";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import MainLayout from "./layouts/MainLayout"; // This component should contain your Sidebar and an <Outlet />
-import Home from "./app/Home"; // This is likely your main dashboard content
+import Home from "./pages/Home"; // This is likely your main dashboard content
 import Dashboard from "./pages/Dashboard";
 import AuthLayout from "./layouts/AuthLayout"; // This component should wrap your Login page
+import Recognize from "./pages/Recognize";
+import ViewAttendance from "./pages/ViewAttendancePage"; // Assuming this is the correct path for your attendance page
 
 /**
  * ProtectedRoute component to guard routes.
@@ -52,7 +54,7 @@ export default function App() {
           {/* Public Routes: Wrapped by AuthLayout */}
           {/* When the path is '/', AuthLayout will render, and its <Outlet> will render Login */}
           <Route element={<AuthLayout />}>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Home />} />
             {/* Add other public routes here if you have any (e.g., /register, /forgot-password) */}
           </Route>
 
@@ -73,7 +75,7 @@ export default function App() {
             <Route path="add-admin" element={<AddAdmin />} />
             <Route path="settings" element={<Settings />} />
             <Route path="profile" element={<Profile />} />
-            <Route path="home" element={<Home />} />
+            {/* <Route path="home" element={<Home />} /> */}
           </Route>
 
           {/* Optional: Catch-all route for any unmatched paths */}
@@ -86,6 +88,8 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+            <Route path="/recognize" element={<Recognize />} />
+            <Route path="/attendance" element={<ViewAttendance />} />
         </Routes>
       </Router>
     </AuthProvider>

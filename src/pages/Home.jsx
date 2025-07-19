@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const [loadingScreen, setLoadingScreen] = useState(false);
   const [errorScreen, setErrorScreen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [errorHeader, setErrorHeader] = useState('');
+  const navigate = useNavigate();
 
   // Show loading screen
   const showLoadingScreen = () => {
@@ -31,20 +33,22 @@ const Home = () => {
   // Window control handlers
   const handleCloseWindow = () => {
     if (window.electronAPI) {
-      window.electronAPI.closeWindow();
+      window.electronAPI.windowClose(); // Corrected to use windowClose
     }
   };
 
   const handleMinimizeWindow = () => {
     if (window.electronAPI) {
-      window.electronAPI.minimizeWindow();
+      window.electronAPI.windowMinimize(); // Corrected to use windowMinimize
     }
   };
 
   const handleMaximizeWindow = () => {
-    if (window.electronAPI) {
-      window.electronAPI.maximizeWindow();
-    }
+    // This button currently only logs. If you have an Electron API for maximize, use it here.
+    console.log("Maximize button clicked. Implement Electron maximize API if available.");
+    // if (window.electronAPI) {
+    //   window.electronAPI.windowMaximize(); // Example if such an API exists
+    // }
   };
 
   // Navigation handlers
@@ -57,11 +61,13 @@ const Home = () => {
     } catch (error) {
       console.error("There was an error: ", error);
       showErrorMessages("Navigation Error", error.message);
+    } finally {
+      hideLoadingScreen(); // Ensure loading screen is hidden even on error
     }
   };
 
   const handleStartApp = () => {
-    window.location.href = "./index.html";
+    navigate('/recognize'); // This was the previous fix, now confirmed working
   };
 
   // Set container height on window resize
@@ -89,10 +95,11 @@ const Home = () => {
   }, []);
 
   return (
-    <>
+    // Removed bg-gray-100 from this outermost div to allow the video to show
+    <div className="relative flex flex-col items-center justify-center h-screen w-screen">
       {/* Loading Screen */}
       {loadingScreen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"> {/* Highest z-index */}
           <div className="loading-screen">
             <span className="w-3 h-3 bg-white rounded-full inline-block mx-1 animate-bounce"></span>
             <span className="w-3 h-3 bg-white rounded-full inline-block mx-1 animate-bounce" style={{ animationDelay: '0.1s' }}></span>
@@ -103,18 +110,18 @@ const Home = () => {
 
       {/* Background Video */}
       <video 
-        src="../assets/videos-background/blue_animated_bg.mp4" 
-        className="fixed w-full h-full object-cover -z-20"
+        src="/videos/ai-bg-blue.mp4"
+        className="fixed w-full h-full object-cover z-5" // Lowest z-index
         autoPlay 
         muted 
         loop
       />
 
       {/* Background Overlay */}
-      <div className="fixed inset-0 bg-gradient-radial from-[#1c065490] via-[#1c06548c] to-[#00000090] -z-10"></div>
+      <div className="fixed inset-0 bg-gradient-radial from-[#1c065490] via-[#1c06548c] to-[#00000090] z-6"></div> {/* Middle z-index */}
 
       {/* Title Bar */}
-      <div className="w-full h-8 max-h-8 bg-transparent flex flex-row items-center justify-between px-2.5 select-none" style={{ WebkitRegionDrag: 'drag' }}>
+      <div className="w-full h-8 max-h-8 bg-transparent flex flex-row items-center justify-between px-2.5 select-none z-7" style={{ WebkitAppRegion: 'drag' }}>
         <div className="titleBarLogo">
           <img src="../assets/DOST-R1.png" alt="DOST Logo" className="h-6 w-auto" />
         </div>
@@ -145,18 +152,18 @@ const Home = () => {
       </div>
 
       {/* Header */}
-      <div className="flex flex-col items-start justify-center pl-[1%] w-full h-24">
+      <div className="flex flex-col items-start justify-center pl-[1%] w-full h-24 z-7">
         <p className="text-center text-[3.5rem] text-[#e7e5ec]">BARS</p>
         <p className="text-center text-base text-[#e7e5ec]">Biometric Attendance Records System</p>
       </div>
 
       {/* Main Container */}
-      <div className="m-0 p-0 w-full flex flex-col items-center justify-center bg-transparent" style={{ height: 'calc(100vh - 30px)' }}>
+      <div className="m-0 p-0 w-full flex flex-col items-center justify-center bg-transparent z-7" style={{ height: 'calc(100vh - 30px)' }}>
         <button 
           className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold text-lg rounded-lg shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 mb-4"
           onClick={handleStartApp}
         >
-          BEGIN
+          Get Started
         </button>
         <button 
           className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg shadow-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105"
@@ -183,8 +190,8 @@ const Home = () => {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
-export default Home; 
+export default Home;
