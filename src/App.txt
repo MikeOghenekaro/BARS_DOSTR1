@@ -64,7 +64,7 @@ export default function App() {
           <Route
             element={
               <ProtectedRoute>
-                <MainLayout /> 
+                <MainLayout /> {/* MainLayout should contain your Sidebar and an <Outlet /> */}
               </ProtectedRoute>
             }
           >
@@ -83,7 +83,9 @@ export default function App() {
           <Route
             path="*"
             element={
+              <ProtectedRoute>
                 <Navigate to="/home" replace />
+              </ProtectedRoute>
             }
           />
             <Route path="/" element={<Home />} />

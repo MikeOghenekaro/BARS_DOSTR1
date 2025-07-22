@@ -10,8 +10,11 @@ const Spinner = () => (
 );
 
 export default function Users() {
+
   const [employees, setEmployees] = useState([]);
+
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -151,7 +154,7 @@ export default function Users() {
                     {employee.unit?.name || "N/A"}
                   </td>
                   <td className="py-4 px-4 text-base text-[#111111] text-center">
-                    {employee.hasEmbeddings ? (
+                    {employee.faceEmbedding.length > 0 ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         <span className="w-2 h-2 mr-1 rounded-full bg-green-500"></span>{" "}
                         In System

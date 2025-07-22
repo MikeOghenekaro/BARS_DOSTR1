@@ -47,6 +47,8 @@ const SidebarLayout = ({ children }) => {
     // { name: "Profile", icon: User2, path: "/profile" },
   ];
 
+
+
   const renderNavItem = (item) => (
     <li key={item.name}>
       <button

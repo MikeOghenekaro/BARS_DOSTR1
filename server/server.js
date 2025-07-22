@@ -551,11 +551,14 @@ app.get("/api/employee", async (req, res) => {
     const employees = await prisma.employee.findMany({
       select: {
         id: true,
-        firstName: true,
-        lastName: true,
-        unit: true,
+        employee_uuid: true,
+        position: true,
+        division: true,
+        firstname: true,
+        middlename: true,
+        lastname: true,
         role: true,
-        // position: true,
+        faceEmbedding: true,
       },
     });
     res.json({ status: "success", employees });

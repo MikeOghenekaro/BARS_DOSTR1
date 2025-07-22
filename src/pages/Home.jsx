@@ -33,31 +33,25 @@ const Home = () => {
   // Window control handlers
   const handleCloseWindow = () => {
     if (window.electronAPI) {
-      window.electronAPI.windowClose(); // Corrected to use windowClose
+      window.electronAPI.closeWindow();
     }
   };
 
   const handleMinimizeWindow = () => {
     if (window.electronAPI) {
-      window.electronAPI.windowMinimize(); // Corrected to use windowMinimize
+      window.electronAPI.minimizeWindow(); // Corrected to use minimizeWindow
     }
-  };
-
-  const handleMaximizeWindow = () => {
-    // This button currently only logs. If you have an Electron API for maximize, use it here.
-    console.log("Maximize button clicked. Implement Electron maximize API if available.");
-    // if (window.electronAPI) {
-    //   window.electronAPI.windowMaximize(); // Example if such an API exists
-    // }
   };
 
   // Navigation handlers
   const handleSignIn = async () => {
     try {
       showLoadingScreen();
-      if (window.electronAPI) {
-        await window.electronAPI.navigateTo('admin');
-      }
+      // if (window.electronAPI) {
+      //   await window.electronAPI.navigateTo('/login');  
+      // }
+      navigate('/login'); // Use react-router's navigate function
+      hideLoadingScreen();
     } catch (error) {
       console.error("There was an error: ", error);
       showErrorMessages("Navigation Error", error.message);
@@ -123,7 +117,7 @@ const Home = () => {
       {/* Title Bar */}
       <div className="w-full h-8 max-h-8 bg-transparent flex flex-row items-center justify-between px-2.5 select-none z-7" style={{ WebkitAppRegion: 'drag' }}>
         <div className="titleBarLogo">
-          <img src="../assets/DOST-R1.png" alt="DOST Logo" className="h-6 w-auto" />
+          <img src="/icons/DOST-R1.png" alt="DOST Logo" className="h-6 w-auto" />
         </div>
         <div className="flex-grow text-center text-sm text-white font-medium w-1/3">BARS</div>
         <div className="flex flex-row justify-end gap-2" style={{ WebkitAppRegion: 'no-drag' }}>
@@ -133,13 +127,6 @@ const Home = () => {
             onClick={handleMinimizeWindow}
           >
             <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#995700] text-[9px] font-bold opacity-0 hover:opacity-100">−</span>
-          </div>
-          <div 
-            className="w-5 h-[18px] rounded-[20%] border border-black/20 cursor-pointer relative transition-all duration-200 ease-in-out hover:scale-110"
-            style={{ background: 'linear-gradient(to bottom, #4b91ca, #2a5272)' }}
-            onClick={handleMaximizeWindow}
-          >
-            <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#0d5016] text-[9px] font-bold opacity-0 hover:opacity-100">+</span>
           </div>
           <div 
             className="w-5 h-[18px] rounded-[20%] border border-black/20 cursor-pointer relative transition-all duration-200 ease-in-out hover:scale-110"

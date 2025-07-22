@@ -25,11 +25,29 @@ export default function Login() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+    // Window control handlers
+  const handleCloseWindow = () => {
+    if (window.electronAPI) {
+      window.electronAPI.closeWindow();
+    }
+  };
+
+  const handleMinimizeWindow = () => {
+    if (window.electronAPI) {
+      window.electronAPI.minimizeWindow();
+    }
+  };
+
+  const handleMaximizeWindow = () => {
+    if (window.electronAPI) {
+      window.electronAPI.maximizeWindow();
+    }
+  };
+
   const handleNavigateHome = () => {
     if (window.electronAPI && window.electronAPI.navigateTo) {
-      setMessage("Navigate Success");
-      console.log("Navigate Success");
-      window.electronAPI.navigateTo("home");
+      navigate("/home");
+
     } else {
       console.warn("Navigate Failed Woefully");
     }
@@ -57,6 +75,7 @@ export default function Login() {
         <div className="flex items-center space-x-4">
           <span className="text-gray-600 text-sm"></span>
         </div>
+        
       </header>
       <div className="flex flex-col items-center justify-center mt-20">
         <div className="bg-blue-700 p-3 rounded-xl mb-6 shadow-md">
@@ -64,7 +83,7 @@ export default function Login() {
         </div>
         <h1 className="text-3xl font-bold text-gray-900 mb-2 ">Welcome</h1>
         <p className="text-gray-600 text-md mb-8 text-center max-w-sm ">
-          Enter your email below to login to your dashboard.
+          Enter admin credentials to gain access
         </p>
         <p>{message}</p>
 
@@ -136,24 +155,6 @@ export default function Login() {
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Remember Me Checkbox */}
-          <div className="flex items-center">
-            <input
-              id="remember-me"
-              name="remember-me"
-              type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-            />
-            {/* <label
-              htmlFor="remember-me"
-              className="ml-2 block text-sm text-gray-900"
-            >
-              Remember me
-            </label> */}
           </div>
 
           <button

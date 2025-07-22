@@ -106,86 +106,94 @@ export default function ViewLogs() {
   }, []); // Empty dependency array means this runs once on mount
 
   return (
-    <div className="p-8 bg-[#eeeeee] min-h-screen font-sans text-[#111111]">
-      <h1 className="text-4xl font-bold mb-6 text-[#001325]">
-        Today's Attendance Logs
-      </h1>
-
-      <div className="bg-white rounded-xl p-6 shadow-md overflow-x-auto">
-        {loading ? (
-          <div className="text-center">
-            <Spinner />
-            <p className="text-[#111111]">Loading attendance logs...</p>
-          </div>
-        ) : error ? (
-          <div className="text-center p-4 text-red-600">
-            <p>Error: {error}</p>
-          </div>
-        ) : attendanceLogs.length === 0 ? (
-          <p className="text-center text-[#111111] opacity-60 p-4">
-            No attendance records for today.
-          </p>
-        ) : (
-          <table className="w-full text-left border-collapse">
-            <thead className="border-b border-gray-200">
-              <tr>
-                <th className="py-3 px-4 text-sm font-medium text-[#001325] opacity-70 uppercase tracking-wider">
-                  Employee
-                </th>
-                <th className="py-3 px-4 text-sm font-medium text-[#001325] opacity-70 uppercase tracking-wider">
-                  AM In
-                </th>
-                <th className="py-3 px-4 text-sm font-medium text-[#001325] opacity-70 uppercase tracking-wider">
-                  AM Out
-                </th>
-                <th className="py-3 px-4 text-sm font-medium text-[#001325] opacity-70 uppercase tracking-wider">
-                  PM In
-                </th>
-                <th className="py-3 px-4 text-sm font-medium text-[#001325] opacity-70 uppercase tracking-wider">
-                  PM Out
-                </th>
-                <th className="py-3 px-4 text-sm font-medium text-[#001325] opacity-70 uppercase tracking-wider text-center">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {attendanceLogs.map((log) => {
-                const status = getAttendanceStatus(log);
-                return (
-                  <tr
-                    key={log.id}
-                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <td className="py-4 px-4 text-base text-[#111111]">
-                      {log.employee}
-                    </td>
-                    <td className="py-4 px-4 text-base text-[#111111]">
-                      {formatTime(log.checkInAm)}
-                    </td>
-                    <td className="py-4 px-4 text-base text-[#111111]">
-                      {formatTime(log.checkOutAm)}
-                    </td>
-                    <td className="py-4 px-4 text-base text-[#111111]">
-                      {formatTime(log.checkInPm)}
-                    </td>
-                    <td className="py-4 px-4 text-base text-[#111111]">
-                      {formatTime(log.checkOutPm)}
-                    </td>
-                    <td className="py-4 px-4 text-base text-[#111111] text-center">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.colorClass}`}
-                      >
-                        {status.text}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+    <>
+      {/* Prevent all scrolling on the page */}
+      <style>{`
+        html, body, #root {
+          overflow: hidden !important;
+          height: 100%;
+        }
+      `}</style>
+      <div className="p-8 bg-[#eeeeee] min-h-screen font-sans text-[#111111]">
+        <h1 className="text-4xl font-bold mb-6 text-[#001325]">
+          Today's Attendance Logs
+        </h1>
+        <div className="bg-white rounded-xl p-6 shadow-md overflow-x-auto">
+          {loading ? (
+            <div className="text-center">
+              <Spinner />
+              <p className="text-[#111111]">Loading attendance logs...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center p-4 text-red-600">
+              <p>Error: {error}</p>
+            </div>
+          ) : attendanceLogs.length === 0 ? (
+            <p className="text-center text-[#111111] opacity-60 p-4">
+              No attendance records for today.
+            </p>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead className="border-b border-gray-200">
+                <tr>
+                  <th className="py-3 px-4 text-sm font-medium text-[#001325] opacity-70 uppercase tracking-wider">
+                    Employee
+                  </th>
+                  <th className="py-3 px-4 text-sm font-medium text-[#001325] opacity-70 uppercase tracking-wider">
+                    AM In
+                  </th>
+                  <th className="py-3 px-4 text-sm font-medium text-[#001325] opacity-70 uppercase tracking-wider">
+                    AM Out
+                  </th>
+                  <th className="py-3 px-4 text-sm font-medium text-[#001325] opacity-70 uppercase tracking-wider">
+                    PM In
+                  </th>
+                  <th className="py-3 px-4 text-sm font-medium text-[#001325] opacity-70 uppercase tracking-wider">
+                    PM Out
+                  </th>
+                  <th className="py-3 px-4 text-sm font-medium text-[#001325] opacity-70 uppercase tracking-wider text-center">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendanceLogs.map((log) => {
+                  const status = getAttendanceStatus(log);
+                  return (
+                    <tr
+                      key={log.id}
+                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      <td className="py-4 px-4 text-base text-[#111111]">
+                        {log.employee}
+                      </td>
+                      <td className="py-4 px-4 text-base text-[#111111]">
+                        {formatTime(log.checkInAm)}
+                      </td>
+                      <td className="py-4 px-4 text-base text-[#111111]">
+                        {formatTime(log.checkOutAm)}
+                      </td>
+                      <td className="py-4 px-4 text-base text-[#111111]">
+                        {formatTime(log.checkInPm)}
+                      </td>
+                      <td className="py-4 px-4 text-base text-[#111111]">
+                        {formatTime(log.checkOutPm)}
+                      </td>
+                      <td className="py-4 px-4 text-base text-[#111111] text-center">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${status.colorClass}`}
+                        >
+                          {status.text}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

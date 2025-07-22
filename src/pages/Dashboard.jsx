@@ -194,7 +194,7 @@ export default function Dashboard() {
                     <span>{record.employee}</span>
                     <span className="text-[#0084ff] font-bold">
                       {formatTime(
-                        record.checkInAm || record.checkInPm || record.date // Still fallback to record.date just in case, though it's likely not there
+                        record.checkInAm || record.checkInPm // Still fallback to record.date just in case, though it's likely not there
                       )}{" "}
                     </span>
                   </li>

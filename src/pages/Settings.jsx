@@ -175,7 +175,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-8 bg-[#eeeeee] min-h-screen font-sans text-[#111111]">
+    <div className="p-8 bg-[#eeeeee] min-h-screen font-sans text-[#111111] overflow-y-auto">
       <h1 className="text-4xl font-bold mb-6 text-[#001325]">
         Application Settings
       </h1>

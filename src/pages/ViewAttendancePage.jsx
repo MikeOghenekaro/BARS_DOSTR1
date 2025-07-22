@@ -37,12 +37,6 @@ const ViewAttendance = () => {
     }
   };
 
-  const handleMaximizeWindow = () => {
-    if (window.electronAPI) {
-      window.electronAPI.maximizeWindow();
-    }
-  };
-
   // Update current time
   const updateCurrentTime = () => {
     const now = new Date();
@@ -127,6 +121,12 @@ const ViewAttendance = () => {
 
   return (
     <>
+    <style>{`
+        html, body, #root {
+          overflow: hidden !important;
+          height: 100%;
+        }
+      `}</style>
       {/* Background Video */}
       <video 
         src="/videos/ai-bg-blue.mp4"
@@ -152,13 +152,6 @@ const ViewAttendance = () => {
             onClick={handleMinimizeWindow}
           >
             <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#995700] text-[9px] font-bold opacity-0 hover:opacity-100">−</span>
-          </div>
-          <div 
-            className="w-5 h-[18px] rounded-[20%] border border-black/20 cursor-pointer relative transition-all duration-200 ease-in-out hover:scale-110"
-            style={{ background: 'linear-gradient(to bottom, #4b91ca, #2a5272)' }}
-            onClick={handleMaximizeWindow}
-          >
-            <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[#0d5016] text-[9px] font-bold opacity-0 hover:opacity-100">+</span>
           </div>
           <div 
             className="w-5 h-[18px] rounded-[20%] border border-black/20 cursor-pointer relative transition-all duration-200 ease-in-out hover:scale-110"
@@ -203,7 +196,13 @@ const ViewAttendance = () => {
 
         {/* Attendance Table */}
         <div className="w-full max-w-6xl bg-black/30 rounded-lg p-6 mb-8">
-          <div className="overflow-x-auto">
+          <div
+            className="overflow-x-auto"
+            style={{
+              maxHeight: "40vh", // Adjust as needed
+              overflowY: "auto",
+            }}
+          >
             <table className="w-full text-white">
               <thead>
                 <tr className="border-b border-gray-600">
@@ -262,4 +261,4 @@ const ViewAttendance = () => {
   );
 };
 
-export default ViewAttendance; 
+export default ViewAttendance;

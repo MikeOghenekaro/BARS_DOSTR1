@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useRef, useState, useEffect } from "react";
-import path from "path"; // Import path for file handling
+import Notification from "@/components/ui/Notification";
 
 
 const EnrollUser = () => {
@@ -14,17 +14,14 @@ const EnrollUser = () => {
   const [loading, setLoading] = useState(false); // Controls the spinner and button state
   const [videoInput, setVideoInput] = useState("0"); // '0' for webcam, 'file' for video file
   const [videoFilePath, setVideoFilePath] = useState(""); // Path for selected video file
-  const [videoFile, setVideoFile] = useState(null); // File object for selected video file
+  const [notifications, setNotifications] = useState([]);
   let cameraStream = useRef(null); // Reference to the camera MediaStream object
-
 
   // New state to store the camera ID from application settings
   const [selectedCameraIdFromSettings, setSelectedCameraIdFromSettings] =
     useState("default");
 
-
   const EMPLOYEE_API_URL = "http://localhost:5000/api/employee"; // Ensure this is correct for your backend
-
 
   // --- Effect to fetch employee list on component mount ---
   useEffect(() => {
@@ -46,7 +43,7 @@ const EnrollUser = () => {
           }
         }
       } catch (err) {
-        setMessage(`Failed to fetch employee list: ${err.message}`);
+        addNotification(`Failed to fetch employee list: ${err.message}`);
       }
     };
     fetchEmployees();
@@ -73,7 +70,7 @@ const EnrollUser = () => {
         }
       } catch (error) {
         console.error("Failed to load app settings for camera:", error);
-        setMessage(`Failed to load camera settings: ${error.message}`);
+        addNotification(`Failed to load camera settings: ${error.message}`);
       }
     };
     loadAppSettings();
@@ -86,7 +83,7 @@ const EnrollUser = () => {
       // Parse status JSON if it's a string, otherwise use directly
       const status =
         typeof statusJson === "string" ? JSON.parse(statusJson) : statusJson;
-      setMessage(status.message); // Display message to the user
+      addNotification(status.message); // Display message to the user
       // If the status indicates a final state (success, fail, error), turn off loading
       if (
         status.status === "success" ||
@@ -94,6 +91,12 @@ const EnrollUser = () => {
         status.status === "error"
       ) {
         setLoading(false);
+        // If enrollment successful, you might want to clear employeeId or refresh list
+        if (status.status === "success") {
+            // Optionally: clear selected employee or navigate
+            // setEmployeeId(""); 
+            // setEmployeeName("");
+        }
       }
     };
 
@@ -106,8 +109,12 @@ const EnrollUser = () => {
     }
 
 
-    // No explicit cleanup for onFaceStatus as it might be a global listener
-    // If memory leaks occur, consider implementing `removeFaceStatusListener` in preload/main.
+    // Cleanup listener on component unmount
+    return () => {
+      if (window.electronAPI && window.electronAPI.removeFaceStatus) {
+        window.electronAPI.removeFaceStatus(handleFaceStatus);
+      }
+    };
   }, []);
 
 
@@ -120,6 +127,8 @@ const EnrollUser = () => {
           selectedEmployee.lastName
         }`
       );
+    } else {
+        setEmployeeName(""); // Clear name if no employee selected
     }
   }, [employeeId, employeeList]);
 
@@ -133,23 +142,26 @@ const EnrollUser = () => {
       // If file input is selected, ensure camera is off
       stopCamera();
     }
+
+    // Cleanup camera on component unmount
+    return () => {
+        stopCamera();
+    };
   }, [videoInput, selectedCameraIdFromSettings]); // Re-run when videoInput or selectedCameraIdFromSettings changes
 
 
   // --- Camera Control Functions ---
-
-
   /**
    * Starts the camera stream using the specified deviceId or the default.
    * @param {string|null} deviceId - The deviceId of the camera to use, or null for default.
    */
   const startCamera = async (deviceId) => {
     stopCamera(); // Stop any existing stream first
-    setMessage(""); // Clear previous messages
+    addNotification(""); // Clear previous messages
 
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setMessage("getUserMedia is not supported by this browser.");
+      addNotification("Camera not supported", "error");
       return;
     }
 
@@ -172,25 +184,25 @@ const EnrollUser = () => {
         videoRef.current.play(); // Play the video
       }
       setIsCameraOn(true); // Update camera status
-      setMessage("Camera started.");
     } catch (err) {
       console.error("Error accessing camera:", err);
+      addNotification(`Camera access failed: ${err.message}`, "error");
       if (
         err.name === "NotFoundError" ||
         err.name === "SourceUnavailableError"
       ) {
-        setMessage(
+        addNotification(
           "Camera not found or unavailable. Please check connections or settings."
         );
       } else if (
         err.name === "NotAllowedError" ||
         err.name === "PermissionDeniedError"
       ) {
-        setMessage(
+        addNotification(
           "Camera access denied. Please grant permission in your system settings."
         );
       } else {
-        setMessage(`Camera access failed: ${err.message}`);
+        addNotification(`Camera access failed: ${err.message}`);
       }
       setIsCameraOn(false); // Update camera status
     }
@@ -213,8 +225,37 @@ const EnrollUser = () => {
     }
   };
 
+  /**
+   * Captures a single frame from the video element as a PNG ArrayBuffer.
+   * @returns {Promise<ArrayBuffer|null>} The captured frame as an ArrayBuffer, or null if capture fails.
+   */
+  const captureFrame = async () => {
+    if (!videoRef.current || !cameraStream.current || videoRef.current.readyState < 2) {
+      AddNotification("Camera not ready or active.");
+      console.warn("Capture: Video element or camera stream not ready.");
+      return null;
+    }
 
-  // --- Event Handlers ---
+    const canvas = document.createElement("canvas");
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const context = canvas.getContext("2d");
+
+    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+    try {
+      const blob = await new Promise((resolve) =>
+        canvas.toBlob(resolve, "image/png")
+      );
+      const arrayBuffer = await blob.arrayBuffer();
+      console.log(`Captured frame as ArrayBuffer: ${arrayBuffer.byteLength} bytes.`);
+      return arrayBuffer;
+    } catch (error) {
+      console.error("Error capturing frame:", error);
+      addNotification(`Error capturing frame: ${error.message}`);
+      return null;
+    }
+  };
 
 
   /**
@@ -224,18 +265,18 @@ const EnrollUser = () => {
   const handleVideoInputChange = (e) => {
     const newVideoInput = e.target.value;
     setVideoInput(newVideoInput); // Update video input state
-    setMessage(""); // Clear messages
+    addNotification(""); // Clear messages
 
 
     if (newVideoInput === "file") {
       stopCamera(); // Stop camera if switching to file input
-      setVideoFile(null); // Clear previous file selection
+      // setVideoFile(null); // No longer directly used
       setVideoFilePath(""); // Clear previous file path
       if (videoRef.current) {
         videoRef.current.src = ""; // Clear video element source
       }
     } else {
-      setVideoFile(null); // Clear file states if switching to webcam
+      // setVideoFile(null); // No longer directly used
       setVideoFilePath("");
       // Camera will be started by the useEffect hook watching `videoInput`
     }
@@ -244,44 +285,33 @@ const EnrollUser = () => {
 
   /**
    * Handles file selection via Electron dialog.
+   * This function is for selecting the file path to send to main.js for processing.
+   * The video display in the renderer will need its own method if desired.
    * @param {Event} e - The click event from the button (optional).
    */
   const handleFileSelect = async (e) => {
     if (e) e.preventDefault(); // Prevent form submission if called from a button
     setVideoInput("file"); // Ensure input source is set to 'file'
-    setMessage("Please select a video file..."); // Inform user
+    adNotification("Please select a video file..."); // Inform user
 
 
     // Call Electron API to open file dialog
     const filePath = await window.electronAPI.selectFile();
     if (filePath) {
       setVideoFilePath(filePath); // Store selected file path
-      setMessage(`Selected file: ${path.basename(filePath)}`); // Display just the filename
+      // Display just the filename, assuming path.basename is available or handled.
+      // If not, you might need to extract it manually or expose path.basename via preload.
+      addNotification(`Selected file: ${filePath.split(/[\\/]/).pop()}`); 
       stopCamera(); // Stop camera if it was on
 
-
-      // Read file content as Blob from preload/main process
-      const fileBlob = await window.electronAPI.readFileAsBlob(filePath);
-      if (fileBlob) {
-        const url = URL.createObjectURL(fileBlob); // Create URL for video element
-        if (videoRef.current) {
-          videoRef.current.src = url; // Set video source
-          videoRef.current.play(); // Play the video file
-        }
-        setIsCameraOn(false); // Camera is not on, a file is playing
-      } else {
-        setMessage("Failed to read selected file.");
-        setVideoFilePath(""); // Clear path if read failed
-        setVideoFile(null);
-      }
     } else {
-      setMessage("File selection cancelled.");
+      addNotification("File selection cancelled.");
       // If user cancels, revert to webcam if it was the previous state, or just clear file path
-      if (videoInput === "0") {
+      if (videoInput === "0") { // Check if webcam was the intended input before cancellation
         startCamera(selectedCameraIdFromSettings); // Restart camera if it was the previous mode
       }
       setVideoFilePath("");
-      setVideoFile(null);
+      // setVideoFile(null); // No longer directly used
     }
   };
 
@@ -292,42 +322,67 @@ const EnrollUser = () => {
    */
   const handleEnroll = async (e) => {
     e.preventDefault(); // Prevents form from reloading the page
-    setMessage(""); // Clear previous messages
+    addNotification(""); // Clear previous messages
 
 
     // Basic validation
     if (!employeeId) {
-      setMessage("Please select an employee.");
+      addNotification("Please select an employee.");
       return;
     }
-    if (videoInput === "file" && !videoFilePath) {
-      setMessage("Please select a video or image file.");
-      return;
-    }
-
-
-    // If webcam is selected, stop the camera before Python accesses it
-    if (videoInput === "0") {
-      console.log("Closing camera for enrollment process...");
-      stopCamera();
-    }
-
 
     setLoading(true); // Activate loading state (spinner appears)
-    setMessage("Initiating enrollment process..."); // Inform user
+    addNotification("Initiating enrollment process..."); // Inform user
 
+    let dataPayload = {
+      employeeId: employeeId,
+      rotateAngle: 0, // Assuming no rotation for enrollment unless specified
+    };
 
     try {
+      if (videoInput === "0") { // Webcam enrollment
+        if (!isCameraOn || !videoRef.current || videoRef.current.readyState < 2) {
+            addNotification("Camera is not active. Please ensure webcam is working.");
+            setLoading(false);
+            return;
+        }
+        console.log("Capturing frames from webcam for enrollment...");
+        addNotification("Capturing frames...");
+        const framesToEnroll = [];
+        const numFrames = 20; // Number of frames to capture
+        const captureInterval = 200; // Milliseconds between captures
+
+        for (let i = 0; i < numFrames; i++) {
+            const frameBuffer = await captureFrame();
+            if (frameBuffer) {
+                framesToEnroll.push(frameBuffer);
+                addNotification(`Captured ${i + 1} of ${numFrames} frames...`);
+            } else {
+                addNotification("Failed to capture enough frames. Please try again.");
+                setLoading(false);
+                return;
+            }
+            await new Promise(resolve => setTimeout(resolve, captureInterval)); // Small delay
+        }
+        console.log(`Finished capturing ${framesToEnroll.length} frames.`);
+        dataPayload.imageBuffers = framesToEnroll; // Attach captured ArrayBuffers
+        stopCamera(); // Stop camera after capturing frames for processing
+        addNotification("Frames captured. Sending to backend for processing...");
+
+      } else if (videoInput === "file") { // Video File enrollment
+        if (!videoFilePath) {
+          addNotification("Please select a video file for enrollment.");
+          setLoading(false);
+          return;
+        }
+        dataPayload.inputSource = videoFilePath; // Pass file path
+        addNotification(`Sending file ${videoFilePath.split(/[\\/]/).pop()} to backend for processing...`);
+      }
+
+
       // Introduce a 3-second delay after camera stops/file is ready
       console.log("Waiting 3 seconds before triggering Python enrollment...");
       await new Promise((resolve) => setTimeout(resolve, 3000)); // 3-second delay
-
-
-      // Prepare the data payload for the main process
-      const dataPayload = {
-        employeeId: employeeId,
-        inputSource: videoInput === "file" ? videoFilePath : "0", // Pass '0' for webcam, or file path
-      };
 
 
       console.warn("Payload ready for enrollment:", dataPayload);
@@ -349,24 +404,56 @@ const EnrollUser = () => {
         // Message and loading state will be updated by the onFaceStatus listener
       } else {
         // Fallback for unexpected result structure from startEnrollment IPC
-        setMessage(`Enrollment process completed with unknown status.`);
+        addNotification(`Enrollment process completed with unknown status.`);
         setLoading(false); // Ensure loading is turned off
       }
     } catch (err) {
-      setMessage(`Failed to initiate enrollment: ${err.message}`);
+      addNotification(`Failed to initiate enrollment: ${err.message}`);
       console.error(`Failed to initiate enrollment: ${err.message}`);
       setLoading(false); // Ensure loading is turned off on immediate error
+    } finally {
+        // Ensure camera is restarted if webcam mode was selected and it's not already on
+        if (videoInput === "0" && !isCameraOn) {
+            startCamera(selectedCameraIdFromSettings);
+        }
+    }
+  };
+
+    // Helper to add a notification to the queue
+  const addNotification = (message, type, details = null) => {
+    const id = Date.now() + Math.random().toString(36).substring(2, 9); // Unique ID for the notification
+    const newNotification = { id, text: message, type, details };
+
+    setNotifications((prevNotifications) => {
+      // Append new notification to show it as the most recent one
+      return [...prevNotifications, newNotification];
+    });
+
+    // Set a timeout to remove the notification after 3 seconds
+    notificationTimeoutIds.current[id] = setTimeout(() => {
+      removeNotification(id);
+    }, 3000);
+  };
+
+  // Helper to remove a notification from the queue
+  const removeNotification = (id) => {
+    setNotifications((prevNotifications) =>
+      prevNotifications.filter((n) => n.id !== id)
+    );
+    if (notificationTimeoutIds.current[id]) {
+      clearTimeout(notificationTimeoutIds.current[id]);
+      delete notificationTimeoutIds.current[id];
     }
   };
 
 
   return (
-    <div className="flex flex-col bg-white-low h-full p-4">
+    <div className="flex flex-col bg-white-low h-full p-4 overflow-y-hidden">
       <div className="biometric-info h-full w-full flex flex-row">
         <div className="camera-input flex flex-col items-center justify-center h-full w-full flex-1 relative">
           {" "}
           {/* Added relative positioning */}
-          <div className="h-[70%] w-[90%] rounded-[5%] bg-[#00000022] overflow-hidden">
+          <div className="h-[70%] w-[90%] rounded-[5%] bg-[#00000022] overflow-y-hidden">
             {" "}
             {/* Added overflow-hidden */}
             <video
@@ -409,7 +496,7 @@ const EnrollUser = () => {
               id="employee-id-input"
               value={employeeId}
               onChange={(e) => setEmployeeId(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-blue-500 p-0.5 rounded-[8px]"
+              className="shadow appearance-none border w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-blue-500 p-0.5 rounded-[8px]"
               style={{ marginBottom: 12 }}
             >
               {employeeList.map((emp) => (
@@ -462,6 +549,3 @@ const EnrollUser = () => {
 
 
 export default EnrollUser;
-
-
-
